@@ -1,0 +1,6 @@
+<h2>Select Action</h2>
+<form method="POST">
+  {% csrf_token %}
+  <button type="submit" name="action" value="encrypt">Encrypt Document</button>
+  <button type="submit" name="action" value="decrypt">Decrypt Document</button>
+</form>
