@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'securepdf_db',  # your database name
         'USER': 'root',          # your MySQL username
-        'PASSWORD': '***',  # your MySQL password
+        'PASSWORD': '8910@Sai',  # your MySQL password
         'HOST': 'localhost',
         'PORT': '3306',
     }

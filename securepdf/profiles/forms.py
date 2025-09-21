@@ -13,6 +13,8 @@ class CustomUserCreationForm(UserCreationForm):
             'aadhar': forms.TextInput(attrs={'class':'w-full rounded-md border px-3 py-2'}),
             'pan': forms.TextInput(attrs={'class':'w-full rounded-md border px-3 py-2'}),
             'school': forms.TextInput(attrs={'class':'w-full rounded-md border px-3 py-2'}),
+            'password1': forms.PasswordInput(attrs={'class':'w-full rounded-md border px-3 py-2'}),
+            'password2': forms.PasswordInput(attrs={'class':'w-full rounded-md border px-3 py-2'}),
         }
 
 class LoginForm(AuthenticationForm):

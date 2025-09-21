@@ -1,6 +1,110 @@
-<h2>Upload File to Encrypt for {{ receiver.username }}</h2>
-<form method="POST" enctype="multipart/form-data">
-  {% csrf_token %}
-  <input type="file" name="document" required>
-  <button type="submit">Encrypt & Download</button>
-</form>
+{% extends "users/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Encryption</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+            "foreground-light": "#1f2937",
+            "foreground-dark": "#e5e7eb",
+            "card-light": "#ffffff",
+            "card-dark": "#1a2831",
+            "border-light": "#e5e7eb",
+            "border-dark": "#374151"
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          boxShadow: {
+            'soft': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)',
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    .file-input-button {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-foreground-light dark:text-foreground-dark">
+
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-lg">
+    <div class="bg-card-light dark:bg-card-dark rounded-lg shadow-soft p-8 text-center">
+
+      <h1 class="text-2xl font-bold mb-4">Document Encryption</h1>
+
+      <p class="mb-8 text-foreground-light/70 dark:text-foreground-dark/70">
+        Upload a document to encrypt it for <span class="font-medium text-primary">{{ receiver.username }}</span>.
+      </p>
+
+      <form method="post" enctype="multipart/form-data" action="{% url 'upload_document' receiver.id %}" class="space-y-6">
+        {% csrf_token %}
+        <div class="relative group">
+          <div class="relative border-2 border-dashed border-border-light dark:border-border-dark rounded-lg p-10 flex flex-col items-center justify-center space-y-3 group-hover:border-primary transition-colors duration-300">
+            <span class="material-symbols-outlined text-5xl text-foreground-light/40 dark:text-foreground-dark/40 group-hover:text-primary transition-colors duration-300">
+              upload_file
+            </span>
+            <p class="font-semibold">Drag & drop or <span class="text-primary">browse</span> your file</p>
+            <p class="text-sm text-foreground-light/60 dark:text-foreground-dark/60">Supported formats: .pdf, .docx</p>
+            <input type="file" name="document" required class="file-input-button" id="fileInput"/>
+          </div>
+
+          <!-- Display uploaded file name here -->
+          <p id="fileNameDisplay" class="mt-2 text-sm text-foreground-light dark:text-foreground-dark"></p>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-300 shadow-sm hover:shadow-md">
+          Encrypt & Download
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+</body>
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+    } else {
+      fileNameDisplay.textContent = '';
+    }
+  });
+</script>
+</html>
+{% endblock %}

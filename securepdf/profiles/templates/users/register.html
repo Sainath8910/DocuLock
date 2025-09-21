@@ -8,21 +8,71 @@
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">
 <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg">
     <h2 class="text-2xl font-bold mb-6 text-center">Register</h2>
+
     <form method="POST">
         {% csrf_token %}
         {{ form.non_field_errors }}
+
+        <!-- Render all fields except password separately -->
         {% for field in form %}
-        <div class="mb-4">
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.errors %}
-                <p class="text-red-500 text-sm">{{ field.errors }}</p>
+            {% if field.name not in "password1 password2" %}
+            <div class="mb-4">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <p class="text-red-500 text-sm">{{ field.errors }}</p>
+                {% endif %}
+            </div>
             {% endif %}
-        </div>
         {% endfor %}
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Register</button>
+
+        <!-- Password 1 -->
+        <div class="mb-4 relative">
+            {{ form.password1.label_tag }}
+            <input type="password" name="{{ form.password1.name }}" id="password1" class="w-full rounded-md border px-3 py-2" placeholder="Enter password">
+            {% if form.password1.errors %}
+                <p class="text-red-500 text-sm">{{ form.password1.errors }}</p>
+            {% endif %}
+            <button type="button" onclick="togglePassword('password1')" class="absolute right-2 top-9 text-gray-500">
+                Show
+            </button>
+        </div>
+
+        <!-- Password 2 -->
+        <div class="mb-4 relative">
+            {{ form.password2.label_tag }}
+            <input type="password" name="{{ form.password2.name }}" id="password2" class="w-full rounded-md border px-3 py-2" placeholder="Confirm password">
+            {% if form.password2.errors %}
+                <p class="text-red-500 text-sm">{{ form.password2.errors }}</p>
+            {% endif %}
+            <button type="button" onclick="togglePassword('password2')" class="absolute right-2 top-9 text-gray-500">
+                Show
+            </button>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            Register
+        </button>
     </form>
-    <p class="mt-4 text-center text-sm">Already have an account? <a href="{% url 'login' %}" class="text-blue-600">Login</a></p>
+
+    <!-- Login & Forgot Password -->
+    <div class="mt-4 text-center text-sm">
+        <p>Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Login</a></p>
+        <p class="mt-1"><a href="#" class="text-blue-600 hover:underline">Forgot Password?</a></p>
+    </div>
 </div>
+
+<script>
+function togglePassword(id){
+    const input = document.getElementById(id);
+    if(input.type === "password"){
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
+</script>
+
 </body>
 </html>

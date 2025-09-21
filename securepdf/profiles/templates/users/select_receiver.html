@@ -1,11 +1,102 @@
-<h2>Select Receiver</h2>
-<form method="POST">
-  {% csrf_token %}
-  <label for="receiver">Choose a user:</label>
-  <select name="receiver" required>
-    {% for user in users %}
-      <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
-    {% endfor %}
-  </select>
-  <button type="submit">Next</button>
-</form>
+{% extends "users/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Select Receiver</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#13a4ec",
+        "background-light": "#f6f7f8",
+        "background-dark": "#101c22",
+        "card-light": "#ffffff",
+        "card-dark": "#1a2831",
+      },
+      fontFamily: { display: ["Inter", "sans-serif"] },
+      borderRadius: { "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px" },
+      boxShadow: { 'soft': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)' }
+    },
+  },
+};
+</script>
+<style>
+.custom-select-container { position: relative; }
+.custom-select-value { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: white; }
+.custom-select-options { position: absolute; top: 100%; left: 0; right: 0; z-index: 10; max-height: 15rem; overflow-y: auto; margin-top: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: white; }
+.custom-select-option { cursor: pointer; padding: 0.5rem 0.75rem; }
+.custom-select-option:hover { background-color: #f3f4f6; }
+.dark .custom-select-value { background-color: #1a2831; border-color: #374151; color: #e5e7eb; }
+.dark .custom-select-options { background-color: #1a2831; border-color: #374151; }
+.dark .custom-select-option:hover { background-color: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-900 dark:text-white">
+
+<div class="flex min-h-screen items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-xl bg-card-light dark:bg-card-dark shadow-soft p-8 text-center">
+    <h1 class="text-2xl font-bold mb-2">Select Receiver</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      Choose a recipient to securely send the document.
+    </p>
+
+    <form method="POST" class="space-y-6" x-data="{
+      open: false,
+      selected: '',
+      search: '',
+      users: [
+        {% for user in users %}
+          { value: '{{ user.id }}', name: '{{ user.username }}', email: '{{ user.email }}' }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      get filteredUsers() {
+        return this.users.filter(u => u.name.toLowerCase().includes(this.search.toLowerCase()) || u.email.toLowerCase().includes(this.search.toLowerCase()))
+      }
+    }">
+      {% csrf_token %}
+      <!-- Custom Select -->
+      <div class="text-left">
+        <label class="block text-sm font-medium mb-2" for="receiver">Choose a user</label>
+        <div class="custom-select-container" @click.away="open = false">
+          <div class="custom-select-value" @click="open = !open">
+            <span x-text="selected ? users.find(u => u.value === selected).name + ' (' + users.find(u => u.value === selected).email + ')' : 'Select a user...'"></span>
+            <span :class="{ 'rotate-180': open }" class="material-symbols-outlined transition-transform">arrow_drop_down</span>
+          </div>
+          <div class="custom-select-options mt-1" x-show="open" x-transition>
+            <div class="relative p-2">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+              <input type="text" x-model="search" placeholder="Search by name or email..." class="w-full pl-8 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary text-sm dark:bg-card-dark dark:border-gray-600 dark:text-white dark:placeholder-gray-400"/>
+            </div>
+            <ul>
+              <template x-for="user in filteredUsers" :key="user.value">
+                <li @click="selected = user.value; open = false" class="custom-select-option" x-text="user.name + ' (' + user.email + ')'"></li>
+              </template>
+              <template x-if="filteredUsers.length === 0">
+                <li class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">No users found.</li>
+              </template>
+            </ul>
+          </div>
+          <input type="hidden" name="receiver" x-model="selected" required>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="w-full bg-primary text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-200">
+        Next
+      </button>
+    </form>
+  </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
+{% endblock %}

@@ -1,26 +1,150 @@
-<h2>Decrypt Document</h2>
+{% extends "users/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Decryption</title>
 
-{% if question %}
-    <p><strong>Question:</strong> {{ question }}</p>
-{% else %}
-    <p>Please upload an encrypted document to see the question.</p>
-{% endif %}
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-<form method="post" enctype="multipart/form-data" 
-      action="{% url 'decrypt_document' %}">  <!-- Form action added -->
-    {% csrf_token %}
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 
-    {% if not question %}
-        <label for="document">Select Encrypted File:</label>
-        <input type="file" name="document" required>
-    {% endif %}
+  <!-- Tailwind Custom Config -->
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+            "foreground-light": "#1f2937",
+            "foreground-dark": "#e5e7eb",
+            "card-light": "#ffffff",
+            "card-dark": "#1a2831",
+            "border-light": "#e5e7eb",
+            "border-dark": "#374151"
+          },
+          fontFamily: { "display": ["Inter", "sans-serif"] },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+          boxShadow: {
+            'soft': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)',
+          }
+        }
+      }
+    }
+  </script>
 
-    {% if question %}
-        <label for="answer">Your Answer:</label>
-        <input type="text" name="answer" required>
-        <button type="submit">Decrypt & Download</button>
-    {% else %}
-        <button type="submit">Show Question</button>
-    {% endif %}
+  <style>
+    .file-input-button {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-foreground-light dark:text-foreground-dark">
 
-</form>
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-lg">
+      <div class="bg-card-light dark:bg-card-dark rounded-lg shadow-soft p-8 text-center">
+
+        <h1 class="text-2xl font-bold mb-4">Document Decryption</h1>
+
+        {% if not question %}
+        <!-- STEP 1: Upload Document -->
+        <p class="mb-8 text-foreground-light/70 dark:text-foreground-dark/70">
+          Please upload an encrypted document to see the question.
+        </p>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'decrypt_document' %}" class="space-y-6">
+          {% csrf_token %}
+
+          <div class="relative group">
+            <div class="relative border-2 border-dashed border-border-light dark:border-border-dark rounded-lg p-10 flex flex-col items-center justify-center space-y-3 group-hover:border-primary transition-colors duration-300">
+                <span class="material-symbols-outlined text-5xl text-foreground-light/40 dark:text-foreground-dark/40 group-hover:text-primary transition-colors duration-300">
+                upload_file
+                </span>
+                <p class="font-semibold">Drag & drop or <span class="text-primary">browse</span> your file</p>
+                <p class="text-sm text-foreground-light/60 dark:text-foreground-dark/60">Supported formats: .enc, .pdf, .docx</p>
+                <input type="file" name="document" required class="file-input-button" id="fileInput"/>
+            </div>
+
+            <!-- Display uploaded file name here -->
+            <p id="fileNameDisplay" class="mt-2 text-sm text-foreground-light dark:text-foreground-dark"></p>
+            </div>
+
+          <button type="submit" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-300 shadow-sm hover:shadow-md">
+            Show Question
+          </button>
+        </form>
+
+        {% else %}
+        <!-- STEP 2: Answer Question -->
+        <div class="mb-6 text-left">
+          <p class="text-sm font-medium text-foreground-light/70 dark:text-foreground-dark/70 mb-1">Question:</p>
+          <div class="bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg p-4 text-left">
+            {{ question }}
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'decrypt_document' %}" class="space-y-6 text-left">
+          {% csrf_token %}
+
+          <div>
+            <label for="answer" class="block text-sm font-medium mb-2">Your Answer:</label>
+            <input type="text" name="answer" required class="w-full rounded-lg border border-border-light dark:border-border-dark p-3 focus:ring-2 focus:ring-primary focus:outline-none">
+          </div>
+
+          <!-- Hidden fields -->
+          <input type="hidden" name="encrypted_data" value="{{ encrypted_data }}">
+          <input type="hidden" name="pattern" value="{{ pattern }}">
+
+          <button type="submit" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-300 shadow-sm hover:shadow-md">
+            Decrypt & Download
+          </button>
+        </form>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</body>
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+    } else {
+      fileNameDisplay.textContent = '';
+    }
+  });
+</script>
+</html>
+{% endblock %}

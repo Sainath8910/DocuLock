@@ -7,6 +7,7 @@ from cryptography.fernet import Fernet
 from django.contrib.auth import get_user_model
 import random
 import base64, hashlib
+from django.contrib import messages
 
 from core.models import Question
 
@@ -42,8 +43,15 @@ def logout_view(request):
     return redirect("login")
 
 
+@login_required
 def dashboard_view(request):
-    return render(request, "users/dashboard.html")
+    # Get the currently logged-in user
+    user = request.user
+
+    context = {
+        "user_profile": user
+    }
+    return render(request, "users/dashboard.html", context)
 
 
 def generate_key(answer: str):
@@ -93,7 +101,7 @@ def generate_answer_from_pattern(user, pattern: str):
         answer = user.email
     if "SCHOOL" in pattern:
         answer = user.school
-
+    print(answer)
     return answer
 
 
@@ -125,8 +133,11 @@ def upload_document_view(request, receiver_id=None):
 
         # Combine question + pattern + encrypted data
         combined_content = (
-            f"QUESTION:{question_text}\nPATTERN:{pattern}\n\n".encode() + encrypted_data
-        )
+        f"QUESTION:{question_text}\n"
+        f"PATTERN:{pattern}\n"
+        f"RECEIVER_ID:{receiver.id}\n\n".encode()  # <-- use ID here
+        + encrypted_data
+    )
 
         response = HttpResponse(
             combined_content, content_type="application/octet-stream"
@@ -140,41 +151,73 @@ def upload_document_view(request, receiver_id=None):
 @login_required
 def decrypt_document_view(request):
     if request.method == "POST":
-        print("*1")
-        # Check if a new file is uploaded
+        # Step 1 → File uploaded
         if request.FILES.get("document"):
-            print("*1")
             uploaded_file = request.FILES["document"].read()
-            
-            # Split QUESTION and encrypted data
+
             try:
+                # Split headers and encrypted data
                 parts = uploaded_file.split(b"\n\n", 1)
-                question_line = parts[0].decode()
+                header_lines = parts[0].decode().split("\n")
                 encrypted_data = parts[1]
-                question = question_line.replace("QUESTION:", "")
-            except Exception:
-                return HttpResponse("Invalid encrypted file format.", status=400)
-            # Render form to ask for answer
-            return render(request, "users/decrypt_document.html", {
-                "question": question,
-                "encrypted_data": encrypted_data  # pass for decryption
-            })
-        
-        # If answer is submitted
+
+                # Extract question, pattern, and receiver
+                question_line = [l for l in header_lines if l.startswith("QUESTION:")][0]
+                pattern_line = [l for l in header_lines if l.startswith("PATTERN:")][0]
+                receiver_line = [l for l in header_lines if l.startswith("RECEIVER_ID:")][0]
+
+                question = question_line.replace("QUESTION:", "").strip()
+                pattern = pattern_line.replace("PATTERN:", "").strip()
+                intended_receiver_id = int(receiver_line.replace("RECEIVER_ID:", "").strip())
+
+                # 🚨 Check if current user is the intended receiver
+                if request.user.id != intended_receiver_id:
+                    messages.error(request, "❌ You are not the intended receiver of this file.")
+                    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+                # Encode encrypted data safely for HTML
+                encrypted_data_b64 = base64.b64encode(encrypted_data).decode("utf-8")
+
+            except Exception as e:
+                messages.error(request, f"Invalid encrypted file format. {e}")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+            return render(
+                request,
+                "users/decrypt_document.html",
+                {
+                    "question": question,
+                    "pattern": pattern,
+                    "encrypted_data": encrypted_data_b64,
+                },
+            )
+
+        # Step 2 → Answer submitted
         elif "answer" in request.POST and request.POST.get("encrypted_data"):
-            answer = request.POST["answer"]
-            encrypted_data = request.POST["encrypted_data"].encode('latin1')  # preserve bytes
-            
+            entered_answer = request.POST.get("answer").strip()
+            encrypted_data_b64 = request.POST["encrypted_data"]
+            pattern = request.POST.get("pattern")
+
             try:
-                key = generate_key(answer)
+                expected_answer = generate_answer_from_pattern(request.user, pattern)
+                if entered_answer != expected_answer:
+                    messages.error(request, "❌ Wrong answer, decryption failed.")
+                    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+                encrypted_data = base64.b64decode(encrypted_data_b64)
+                key = generate_key(entered_answer)
                 fernet = Fernet(key)
                 decrypted_data = fernet.decrypt(encrypted_data)
-                
-                response = HttpResponse(decrypted_data, content_type="application/octet-stream")
+
+                response = HttpResponse(
+                    decrypted_data, content_type="application/octet-stream"
+                )
                 response["Content-Disposition"] = 'attachment; filename="decrypted_file.pdf"'
                 return response
-            except Exception:
-                return HttpResponse("❌ Wrong answer, decryption failed.", status=400)
 
-    # Initial GET → show upload form
+            except Exception as e:
+                messages.error(request, f"❌ Decryption failed. {e}")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    # Initial page load
     return render(request, "users/decrypt_document.html")

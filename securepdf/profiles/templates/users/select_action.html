@@ -1,6 +1,59 @@
-<h2>Select Action</h2>
-<form method="POST">
-  {% csrf_token %}
-  <button type="submit" name="action" value="encrypt">Encrypt Document</button>
-  <button type="submit" name="action" value="decrypt">Decrypt Document</button>
-</form>
+{% extends "users/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Select Action</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+            "card-light": "#ffffff",
+            "card-dark": "#1a2831",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          boxShadow: {
+            'soft': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)',
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white">
+
+<div class="flex items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-md bg-card-light dark:bg-card-dark rounded-xl shadow-soft p-8 text-center">
+    
+    <h1 class="text-3xl font-bold mb-8">Select Action</h1>
+    
+    <form method="POST" class="flex flex-col md:flex-row gap-4">
+      {% csrf_token %}
+      <button type="submit" name="action" value="encrypt" 
+        class="flex-1 bg-primary text-white font-semibold py-4 px-6 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-200">
+        Encrypt Document
+      </button>
+      <button type="submit" name="action" value="decrypt"
+        class="flex-1 bg-primary text-white font-semibold py-4 px-6 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-200">
+        Decrypt Document
+      </button>
+    </form>
+
+  </div>
+</div>
+
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Doculock{% endblock %}</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+          },
+          fontFamily: { "display": ["Inter"] },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    .group:focus .group-focus\:block { display: block; }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+
+  <!-- Header / Navbar -->
+  <header>
+    <nav class="bg-background-light dark:bg-background-dark border-b border-primary/20 dark:border-primary/30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+
+          <!-- Left: Brand -->
+          <div class="flex items-center space-x-2">
+            <!-- Back Button -->
+            <a href="javascript:history.back()" class="p-2 rounded hover:bg-primary/10 dark:hover:bg-primary/20 transition">
+                <span class="material-symbols-outlined text-primary">arrow_back</span>
+            </a>
+
+            <!-- Brand Name -->
+            <div class="flex items-center">
+            <a href="{% url 'select_action' %}" class="font-black text-2xl text-primary hover:underline">
+                Doculock
+            </a>
+            </div>
+            </div>
+
+          <!-- Right: Profile Dropdown -->
+          <div class="relative">
+            <div class="flex items-center space-x-2 cursor-pointer" id="profileBtn">
+                <!-- Username -->
+                <span class="text-sm font-medium text-foreground-light dark:text-foreground-dark">
+                {{ user.get_full_name|default:user.username }}
+                </span>
+
+                <!-- Avatar -->
+                <img alt="User avatar" class="h-10 w-10 object-cover rounded-full"
+                src="{{ user.profile.avatar_url|default:'https://lh3.googleusercontent.com/aida-public/AB6AXuDrRUjV4T3jZd-eMETKlVACFoFfbdznY3xl8ie4ZeMbgmIPgiK3HWzkb2bbHNXk5j_WH0bEIHo7kbchmp6EX897NjdxEz8T5-c9sPqqXhMJLz7FNKEhDzF7sTIHtxmTDfFMY8WzMo50cHN0mFT3k50TS3feBEmy0reTB5orWE1xS7WSrK9YimEWLoQ2l0wABLa43Ro9yb915QFPdPB0nIy4GACT6WTvDjq2OAy0uOQzuI_YLeWhAVwArmThPr_U3qYyGKFtifCrtBY' }}">
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-background-light dark:bg-background-dark rounded-lg shadow-lg py-1 ring-1 ring-black ring-opacity-5 transition duration-200">
+                <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-primary/20">Profile</a>
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-primary/20">Logout</a>
+            </div>
+            </div>
+
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="p-4">
+    {% block content %}{% endblock %}
+  </main>
+<div id="toast-container" class="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="bg-red-500 text-white px-4 py-2 rounded shadow-md animate-slide-in-right">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+</body>
+<script>
+  const profileBtn = document.getElementById('profileBtn');
+  const profileDropdown = document.getElementById('profileDropdown');
+
+  profileBtn.addEventListener('click', () => {
+    profileDropdown.classList.toggle('hidden');
+  });
+
+  // Optional: close dropdown when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!profileBtn.contains(event.target) && !profileDropdown.contains(event.target)) {
+      profileDropdown.classList.add('hidden');
+    }
+  });
+</script>
+<style>
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+</style>
+
+<script>
+setTimeout(() => {
+  const toasts = document.querySelectorAll('#toast-container > div');
+  toasts.forEach(t => t.remove());
+}, 4000);
+</script>
+</html>
