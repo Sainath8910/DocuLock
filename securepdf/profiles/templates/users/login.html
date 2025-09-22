@@ -1,28 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Login</title>
-<script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Heroicons CDN for eye icon -->
+    <script src="https://unpkg.com/@heroicons/react/24/solid/eye.js"></script>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">
-<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {% for field in form %}
-        <div class="mb-4">
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.errors %}
-                <p class="text-red-500 text-sm">{{ field.errors }}</p>
-            {% endif %}
-        </div>
-        {% endfor %}
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
-    </form>
-    <p class="mt-4 text-center text-sm">Don't have an account? <a href="{% url 'register' %}" class="text-blue-600">Register</a></p>
-</div>
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                {% if field.name == "password" %}
+                <!-- Password field with eye toggle -->
+                <div class="mb-4 relative">
+                    {{ field.label_tag }}
+                    <div class="relative">
+                        {{ field }}
+                        <button type="button" id="togglePassword"
+                            class="absolute inset-y-0 right-3 flex items-center text-gray-500 focus:outline-none">
+                            <!-- Eye Icon -->
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor"
+                                class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 
+                                    9.542 7-1.274 4.057-5.065 7-9.542 7
+                                    -4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {% if field.errors %}
+                        <p class="text-red-500 text-sm">{{ field.errors }}</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <!-- Other fields -->
+                <div class="mb-4">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-red-500 text-sm">{{ field.errors }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                Login
+            </button>
+        </form>
+        <p class="mt-1 text-center text-sm"><a href="#" class="text-blue-600 hover:underline">Forgot Password?</a></p>
+        <p class="mt-4 text-center text-sm">
+            Don't have an account?
+            <a href="{% url 'register' %}" class="text-blue-600">Register</a>
+        </p>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const passwordField = document.querySelector("#id_password");
+        const toggleBtn = document.querySelector("#togglePassword");
+        const eyeIcon = document.querySelector("#eyeIcon");
+
+        toggleBtn.addEventListener("click", function () {
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                // Change eye icon to crossed eye
+                eyeIcon.outerHTML = `
+                <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor"
+                    class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 
+                        19c-4.477 0-8.268-2.943-9.542-7
+                        a10.05 10.05 0 012.989-4.243M6.219 6.219
+                        A9.956 9.956 0 0112 5c4.477 0 8.268 
+                        2.943 9.542 7a9.956 9.956 0 01-4.3 
+                        5.053M15 12a3 3 0 11-6 0 3 3 0 
+                        016 0zM3 3l18 18"/>
+                </svg>`;
+            } else {
+                passwordField.type = "password";
+                // Change back to normal eye
+                eyeIcon.outerHTML = `
+                <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor"
+                    class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 
+                        016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 
+                        12 5c4.477 0 8.268 2.943 
+                        9.542 7-1.274 4.057-5.065 
+                        7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>`;
+            }
+        });
+    });
+    </script>
 </body>
 </html>

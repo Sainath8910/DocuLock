@@ -9,7 +9,7 @@
         <img alt="User avatar" class="h-24 w-24 rounded-full"
              src="{{ user_profile.profile_picture_url|default:'https://via.placeholder.com/150' }}"/>
         <div>
-          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ user_profile.username }}</h3>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ user_profile.full_name }}</h3>
           <p class="text-slate-500 dark:text-slate-400">{{ user_profile.email }}</p>
           <span class="mt-2 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full
             {% if user_profile.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
@@ -41,6 +41,18 @@
           <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">School</dt>
           <dd class="mt-1 text-sm text-slate-900 dark:text-white">{{ user_profile.school }}</dd>
         </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">Date of Birth</dt>
+          <dd class="mt-1 text-sm text-slate-900 dark:text-white">{{ user_profile.dob|date:"Y-m-d" }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">City</dt>
+          <dd class="mt-1 text-sm text-slate-900 dark:text-white">{{ user_profile.city }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">Gender</dt>
+          <dd class="mt-1 text-sm text-slate-900 dark:text-white">{{ user_profile.gender }}</dd>
+        </div>
         <div class="md:col-span-2">
           <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">Registration Date</dt>
           <dd class="mt-1 text-sm text-slate-900 dark:text-white">{{ user_profile.date_joined|date:"Y-m-d" }}</dd>
@@ -71,6 +83,5 @@
       </span>
     </div>
   </div>
-
 </main>
 {% endblock %}

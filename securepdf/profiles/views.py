@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 import random
 import base64, hashlib
 from django.contrib import messages
-
+import re
 from core.models import Question
 
 User = get_user_model()
@@ -82,27 +82,35 @@ def select_receiver_view(request):
     return render(request, "users/select_receiver.html", {"users": users})
 
 
-def generate_answer_from_pattern(user, pattern: str):
+def generate_answer_from_pattern(user, pattern: str) -> str:
     """
-    Generate the answer dynamically from the pattern.
-    Example patterns:
-        - "DOB:DDMMYYYY"  -> user.dob formatted as DDMMYYYY
-        - "USERNAME"      -> user.username
-        - "EMAIL"         -> user.email
-        - "SCHOOL"        -> user.school
+    Generate answer from a pattern like:
+    'username[:2]+school[:2]+aadhar[-4:]'
     """
-    answer = pattern
-
-    if "DOB" in pattern:
-        answer = user.dob.strftime("%d%m%Y")
-    if "USERNAME" in pattern:
-        answer = user.username
-    if "EMAIL" in pattern:
-        answer = user.email
-    if "SCHOOL" in pattern:
-        answer = user.school
-    print(answer)
+    answer = ""
+    
+    # Split by '+' to handle each field slice
+    parts = pattern.split("+")
+    
+    for part in parts:
+        # Match "field[slice]" pattern
+        m = re.match(r"(\w+)\[(.*?)\]", part)
+        if not m:
+            continue
+        
+        field_name, slice_expr = m.groups()
+        value = getattr(user, field_name, "")
+        
+        # Build slice object safely
+        try:
+            # slice_expr can be "", ":", "start:end", "-n:", ":-n", etc.
+            s = slice(*[int(x) if x else None for x in slice_expr.split(":")])
+            answer += value[s]
+        except Exception:
+            answer += ""  # fallback if slice fails
+    print(pattern,answer)
     return answer
+
 
 
 @login_required
@@ -120,6 +128,7 @@ def upload_document_view(request, receiver_id=None):
 
         # Pick a random question
         question_obj = random.choice(Question.objects.all())
+        question_title = question_obj.title
         question_text = question_obj.description
         pattern = question_obj.pattern
 
@@ -133,9 +142,11 @@ def upload_document_view(request, receiver_id=None):
 
         # Combine question + pattern + encrypted data
         combined_content = (
-        f"QUESTION:{question_text}\n"
+        f"QUESTION:{question_title}\n"
+        f"EXPLANATION:{question_text}\n"
         f"PATTERN:{pattern}\n"
-        f"RECEIVER_ID:{receiver.id}\n\n".encode()  # <-- use ID here
+        f"RECEIVER_ID:{receiver.id}\n"
+        f"FILENAME:{uploaded_file.name}\n\n".encode()  # <-- use ID here
         + encrypted_data
     )
 
@@ -163,9 +174,12 @@ def decrypt_document_view(request):
 
                 # Extract question, pattern, and receiver
                 question_line = [l for l in header_lines if l.startswith("QUESTION:")][0]
+                example = [l for l in header_lines if l.startswith("EXPLANATION:")][0]
                 pattern_line = [l for l in header_lines if l.startswith("PATTERN:")][0]
                 receiver_line = [l for l in header_lines if l.startswith("RECEIVER_ID:")][0]
+                filename_line = [l for l in header_lines if l.startswith("FILENAME:")][0]
 
+                original_filename = filename_line.replace("FILENAME:", "").strip()
                 question = question_line.replace("QUESTION:", "").strip()
                 pattern = pattern_line.replace("PATTERN:", "").strip()
                 intended_receiver_id = int(receiver_line.replace("RECEIVER_ID:", "").strip())
@@ -187,8 +201,10 @@ def decrypt_document_view(request):
                 "users/decrypt_document.html",
                 {
                     "question": question,
+                    "example":example,
                     "pattern": pattern,
                     "encrypted_data": encrypted_data_b64,
+                    "original_filename": original_filename,
                 },
             )
 
@@ -197,6 +213,7 @@ def decrypt_document_view(request):
             entered_answer = request.POST.get("answer").strip()
             encrypted_data_b64 = request.POST["encrypted_data"]
             pattern = request.POST.get("pattern")
+            original_filename = request.POST.get("original_filename")
 
             try:
                 expected_answer = generate_answer_from_pattern(request.user, pattern)
@@ -212,7 +229,7 @@ def decrypt_document_view(request):
                 response = HttpResponse(
                     decrypted_data, content_type="application/octet-stream"
                 )
-                response["Content-Disposition"] = 'attachment; filename="decrypted_file.pdf"'
+                response["Content-Disposition"] = f'attachment; filename="{original_filename}"'
                 return response
 
             except Exception as e:
